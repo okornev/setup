@@ -58,8 +58,11 @@ platforms:
       compute/oneops.1.Compute:
         compute:
           size: XL
+
+      os/oneops.1.Os:
+        os:
           hosts:
-            daq: 127.0.0.1
+            daqdb: 127.0.0.1
           additional_search_domains:
           - $OO_GLOBAL{DOMAIN}
       volume/oneops.1.Volume:
@@ -74,9 +77,9 @@ platforms:
           seed_count: '1'
           num_tokens: '256'
           partitioner: org.apache.cassandra.dht.RandomPartitioner
-          version: '2.0'
+          version: '2.1.9'
           heap_newsize: default
-          endpoint_snitch: org.apache.cassandra.locator.Propertyoneops.1.FileSnitch
+          endpoint_snitch: org.apache.cassandra.locator.GossipingPropertyFileSnitch
       user/oneops.1.User:
         ooadmin:
           home_directory_mode: '755'
@@ -142,7 +145,7 @@ platforms:
       logstash/oneops.1.Logstash:
         logstash:
           outputs:
-           - if "drop" not in [tags] {     oneopsdaq {codec => json }   }   if "metric" in [tags] { file {   message_format => "%{events.rate_1m}"  path=> "/var/run/logstash_metric"         }    }
+           - if "drop" not in [tags] {     oneopsdaq {codec => json cluster_host_port => "daqdb:9160"  }   }   if "metric" in [tags] { file {   message_format => "%{events.rate_1m}"  path=> "/var/run/logstash_metric"         }    }
 
           inputs:
            - 'lumberjack {     port => 4000 ssl_certificate => "/opt/.certs/logstash.crt"     ssl_key => "/opt/.certs/logstash.key"   } '
@@ -212,10 +215,10 @@ platforms:
      - daqdb
     variables:
         deploycontext: daq
-        version: daq-api-$OO_GLOBAL{VERSION}
+        version: $OO_GLOBAL{VERSION}
         notifypass: '::ENCRYPTED::'
-        ecv-user: $$OO_GLOBAL{ECV-USER}
-        ecv-secret: $$OO_GLOBAL{ECV-SECRET}
+        ecv-user: $OO_GLOBAL{ECV-USER}
+        ecv-secret: $OO_GLOBAL{ECV-SECRET}
         tomcatloglocation: $OO_GLOBAL{TOMCATLOGLOCATION}
         tomcatheapdumppath: $OO_GLOBAL{TOMCATHEAPDUMPPATH}
         tomcatgclog: $OO_GLOBAL{TOMCATGCLOG}
@@ -231,6 +234,7 @@ platforms:
         cms-des-file-location: $OO_GLOBAL{CMS-DES-FILE-LOCATION}
         cms-db-des-key: $OO_GLOBAL{CMS-DB-DES-KEY}
         daq-db: $OO_GLOBAL{DAQ-DB}
+        daq-version: 1.0.0
     components:
       tomcat/oneops.1.Tomcat:
         tomcat:
@@ -378,7 +382,7 @@ platforms:
                                command "rm -fr #{node[:tomcat][:webapp_dir]}/#{war}*"
                             end
                             execute "#{war} war deploy" do
-                               command "cp #{node[:oneops][:home]}/dist/#{war}*.war #{node[:tomcat][:webapp_dir]}"
+                               command "cp #{node[:oneops][:home]}/dist/#{war}*.war #{node[:tomcat][:webapp_dir]}/$OO_LOCAL{deploycontext}-$OO_LOCAL{daq-version}.war"
                             end
 
                           end
@@ -390,10 +394,10 @@ platforms:
 
           should_expand: 'true'
           checksum: ''
-          location: $OO_LOCAL{distbase}/oneops-daq-api-1.0.0-$OO_LOCAL{version}.tar.gz
+          location: $OO_LOCAL{distbase}/oneops-daq-api-$OO_LOCAL{daq-version}-$OO_LOCAL{version}.tar.gz
           repository: '*Using full RepoURL*'
           version: $OO_LOCAL{version}
-          url: $OO_LOCAL{distbase}/oneops-daq-api-1.0.0-$OO_LOCAL{version}.tar.gz
+          url: $OO_LOCAL{distbase}/oneops-daq-api-$OO_LOCAL{daq-version}-$OO_LOCAL{version}.tar.gz
           username: not_required
           attachments:
             disableECV:
@@ -425,7 +429,7 @@ platforms:
         listeners:
          - http 8080 http 8080
         ecv_map:
-          '8080': GET /$OO_LOCAL{deploycontext}/rest/ecv/status
+          '8080': GET /$OO_LOCAL{deploycontext}-$OO_LOCAL{daq-version}/rest/ecv/status
 
       fqdn/oneops.1.Fqdn:
        fqdn:

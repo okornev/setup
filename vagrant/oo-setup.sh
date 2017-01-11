@@ -26,5 +26,18 @@ cp $BUILD_BASE/dev-tools/setup-scripts/* .
 
 ./oneops_build.sh "$@"
 
+if [ $? -ne 0 ]; then
+  exit 1;
+fi
+
+if [ -z $OO_VALIDATION ]; then
+	echo "OO_VALIDATION environment variable has not neen set in the host machine.. Skipping OneOps Validation"
+elif [ $OO_VALIDATION == "false" ]; then
+	echo "OO_VALIDATION environment variable is set as false in the host machine.. Skipping OneOps Validation"
+elif [ $OO_VALIDATION == "true" ]; then
+	echo "OO_VALIDATION environment variable is set as true in the host machine.. Doing OneOps Validation"
+	./oo_test.rb
+fi
+
 now=$(date +"%T")
 echo "All done at : $now"

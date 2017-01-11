@@ -10,6 +10,21 @@ platforms:
               size: 100%FREE
               mount_point: /data
               fstype: ext4
+          secgroup/oneops.1.Secgroup:
+            secgroup:
+              inbound:
+              - 22 22 tcp 0.0.0.0/0
+              - 9200 9400 tcp 0.0.0.0/0
+              - 5000 5000 tcp 0.0.0.0/0
+              - 1936 1936 tcp 0.0.0.0/0
+              - 35854 35854 tcp 0.0.0.0/0
+          lb/oneops.1.Lb:
+            lb:
+             listeners:
+               - http 9200 http 9200
+               - tcp 35854 tcp 35854
+             ecv_map:
+               '9200': GET /
           elasticsearch/oneops.1.Es:
             elasticsearch:
               awareness_attribute: cloud
@@ -27,11 +42,39 @@ platforms:
           logstash/oneops.1.Logstash:
             logstash:
               outputs:
-              - elasticsearch { host => "localhost" port => "9300" cluster => "oneopslogs”
-                protocol => "transport" }
+              - elasticsearch { 
+                  host => "localhost" port => "9300" cluster => "oneopslogs" index_type => "%{type}" protocol => "transport" 
+                }
               inputs:
-              - lumberjack { port => 5000 ssl_certificate => "/opt/.certs/logstash.crt"
-                ssl_key => "/opt/.certs/logstash.key" type => "lumberjack" }
+              - lumberjack { 
+                  port => 5000 ssl_certificate => "/opt/.certs/logstash.crt" ssl_key => "/opt/.certs/logstash.key" type => "inductor"
+                }
+              filters:
+              - grok {
+                  match => [ "message", "%{TIMESTAMP_ISO8601:ts}%{SPACE}%{LOGLEVEL:level}%{SPACE}%{WORD:class}:%{NUMBER:linenumber}%{SPACE}%{NUMBER:requestId}:%{NUMBER:ciId}%{SPACE}[-]*%{SPACE}%{GREEDYDATA:message_string}"]
+                }
+                mutate {
+                  gsub => [ "ts", ",", "." ]
+                }
+                date {
+                  locale => "en"  match => ["ts", "ISO8601"]  timezone => "UTC"
+                }
+                mutate {
+                  gsub => [ "message_string", "cmd out:", "",  "message_string", "cmd:", ""]
+                }
+                if "_grokparsefailure" in [tags] {
+                  mutate {
+                    remove_tag => [ "_grokparsefailure" ]
+                  }
+                }
+                else {
+                  mutate {
+                     replace => { "message" => "%{message_string}" }
+                  }
+                }
+                mutate {
+                  remove_field => [ "message_string", "class","ts" ]
+                }
               version: 1.5.3
           file/oneops.1.File:
             logstash-cert:
@@ -49,6 +92,8 @@ platforms:
               lbmethod: leastconn
               retries: '3'
               stats_socket_location: /var/lib/haproxy/stats
+              listeners:
+                '35854': '5000'
               stats_web_port: '1936'
               timeout_server: 1h
               maxconn_defaults: '32000'

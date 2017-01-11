@@ -4,6 +4,7 @@ import:
 - https://raw.githubusercontent.com/oneops/setup/master/design/wire-design.yaml
 - https://raw.githubusercontent.com/oneops/setup/master/design/antenna-design.yaml
 - https://raw.githubusercontent.com/oneops/setup/master/design/cmsdb-design.yaml
+- https://raw.githubusercontent.com/oneops/setup/master/design/activitidb-design.yaml
 - https://raw.githubusercontent.com/oneops/setup/master/design/controller-design.yaml
 - https://raw.githubusercontent.com/oneops/setup/master/design/daq-design.yaml
 - https://raw.githubusercontent.com/oneops/setup/master/design/display-design.yaml
@@ -25,37 +26,40 @@ variables:
   DOMAIN: '**changeme**'
   ECV-SECRET: '::ENCRYPTED::'
   DATA-RETRY-DIR: /mnt/retry/
-  API-USER: '**changeme'
+  API-USER: 'oneopsapi'
   API-SECRET: '::ENCRYPTED::'
-  TOMCATGCLOG: /log/apache-tomcat/gc-tomcat7.log
+  TOMCATGCLOG: /log/gc-tomcat7.log
   INSTALL-DIR: /usr/local/oneops
-  CMS-DB-HOST: '**cmsdb.changeme**'
+  CMS-DB-HOST: 'cmsdb.$OO_GLOBAL{DOMAIN}'
   TOMCATLOGLOCATION: /log/tomcat
   DOMAIN-ALIAS: '**changeme**'
   TOMCAT-ACCESS-LOG-FORMAT: '%h %{X-Cms-User}i %{X-Cms-Scope}i %{NSC-Client-IP}i %l%u %t &quot;%r&quot; %s %b %D %F'
   CMS-DB-DES-KEY: '::ENCRYPTED::'
   TOMCATHEAPDUMPPATH: /mnt/cms_heapdump.hprof
-  SENSORPOOLSIZE: '3'
-  ECV-USER: '**changeme**'
-  CMS-DB-USER: changeme
+  ECV-USER: 'oneopsecv'
+  CMS-DB-USER: 'oneopscms'
   CMS-DES-FILE-LOCATION: /usr/local/oneops/certs/oo.key
   SEARCH-AMQ-PASS: '::ENCRYPTED::'
-  SEARCH-AMQ-USER: '**changeme**'
+  SEARCH-AMQ-USER: 'oneopssearchmq'
+  SEARCH-AMQ-HOST: 'searchmq.$OO_GLOBAL{DOMAIN}'
   VERSION: 16.06.24-RC1
   BACKUP-HOST : '**changeme**'
-  AMQHOST: 'wire'
+  AMQHOST: 'wire.$OO_GLOBAL{DOMAIN}'
   AMQUSER: 'superuser'
-  AMQDBNAME: 'amqdb'
-  AMQDBUSER: 'amqdb'
-  AMQDBPASS: '::ENCRYPTED::'
+  WIREDBNAME: 'wiredb'
+  WIREDBUSER: 'wiredb'
+  WIREDBPASS: '::ENCRYPTED::'
   ACTIVITI-DB-PASS: '::ENCRYPTED::'
   ACTIVITI-DB-USER: 'activiti'
+  ACTIVITI-DB-HOST: 'activitidb.$OO_GLOBAL{DOMAIN}'
+  ACTIVITI-DB-NAME: 'activitidb'
   DAQ-DB: 'daqdb'
   SENSOR-POOL-SIZE : '1'
   DISPLAY-DB-NAME: display
   DISPLAY-DB-USERNAME: display
   DISPLAY-DB-PASSWORD: '::ENCRYPTED::'
   DISPLAY-RAILS-ENV: enterprise
+  SEARCHMQDB: searchmq
   SEARCHMQDBUSER: searchmq
   SEARCHMQDBPASSWORD: '::ENCRYPTED::'
 
